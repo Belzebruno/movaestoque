@@ -43,18 +43,42 @@
 .stock-alert { display:inline-block; padding:6px 10px; border-radius:4px; font-size:13px; background:#fff3d6; color:#854d0e; }
 .stock-alert.stock-empty { background:#fee2e2; color:#991b1b; }
 
-/* Distribui o formulário pela altura disponível, sem cortar telas menores. */
+/* Escala proporcional para toque: celular, tablet e paisagem. */
 @media (max-width: 1100px), (hover: none) and (pointer: coarse) {
  .app-shell { display:flex; flex-direction:column; min-height:100vh; min-height:100dvh; }
- .sidebar { flex:0 0 auto; padding:clamp(24px,5dvh,64px) 24px clamp(20px,4dvh,48px); }
- .sidebar .brand { width:clamp(180px,24vw,240px); }
+ .sidebar { flex:0 0 auto; padding:32px 24px 28px; }
+ .sidebar .brand { width:210px; }
  .main-shell { flex:1; width:100%; }
- main { display:flex; flex-direction:column; flex:1; max-width:640px; padding:0 24px max(24px,env(safe-area-inset-bottom)); }
+ main { display:flex; flex-direction:column; flex:1; max-width:860px; padding:0 24px max(28px,env(safe-area-inset-bottom)); }
  #view-retirada, .withdraw-layout, .catalog-column { display:flex; flex-direction:column; flex:1; width:100%; }
  .withdraw-layout { align-items:stretch; }
- .withdrawal-form { display:flex; flex-direction:column; justify-content:space-evenly; flex:1; gap:clamp(20px,4dvh,48px); padding-bottom:clamp(24px,5dvh,64px); }
+ .withdrawal-form { display:flex; flex-direction:column; justify-content:space-evenly; flex:1; gap:24px; padding-bottom:32px; }
  .withdrawal-form .numbered-field { margin:0; gap:12px; }
- .numbered-field label { font-size:clamp(15px,2vw,19px); }
- .withdrawal-form select { min-height:clamp(58px,7dvh,80px); font-size:clamp(16px,2vw,20px); }
- .mobile-confirm-button { flex-shrink:0; min-height:clamp(56px,7dvh,76px); margin-top:0; font-size:clamp(16px,2vw,19px); }
+ .numbered-field label { font-size:18px; font-weight:550; line-height:1.4; }
+ .withdrawal-form select { min-height:68px; padding:18px; font-size:20px; border-radius:10px; border-color:#ccc; background:#fff; }
+ .mobile-confirm-button { flex-shrink:0; min-height:66px; margin:0; font-size:20px; font-weight:600; border-radius:10px; }
+}
+@media (min-width:600px) and (max-width:1100px), (min-width:600px) and (hover:none) and (pointer:coarse) {
+ .sidebar { padding:clamp(32px,4dvh,64px) 40px clamp(28px,4dvh,56px); }
+ .sidebar .brand { width:clamp(280px,42vw,380px); }
+ main { padding:0 clamp(36px,6vw,64px) max(40px,env(safe-area-inset-bottom)); }
+ .withdrawal-form { gap:32px; padding-bottom:40px; }
+ .withdrawal-form .numbered-field { gap:16px; }
+ .numbered-field label { font-size:26px; }
+ .withdrawal-form select { min-height:96px; padding:24px; font-size:28px; border-radius:14px; }
+ .mobile-confirm-button { min-height:90px; font-size:28px; border-radius:14px; }
+ #review-dialog { max-width:680px; padding:40px; border-radius:14px; }
+ #review-dialog .dialog-heading h2, #review-dialog .success-content h2 { font-size:34px; }
+ #review-dialog .dialog-heading p, #review-dialog .review-note, #review-dialog .success-content p { font-size:20px; }
+ #review-dialog .review-destination strong, #review-dialog .review-item, #review-dialog label { font-size:22px; }
+ #review-dialog .review-destination small { font-size:17px; }
+ #review-dialog select, #review-dialog .primary-button, #review-dialog .secondary-button { font-size:22px; min-height:68px; }
+}
+@media (max-height:650px) and (max-width:1100px), (max-height:650px) and (hover:none) and (pointer:coarse) {
+ .sidebar { padding:20px 24px; }
+ .sidebar .brand { width:180px; }
+ .withdrawal-form { gap:20px; padding-bottom:24px; }
+ .numbered-field label { font-size:18px; }
+ .withdrawal-form select { min-height:60px; font-size:20px; padding:14px 18px; }
+ .mobile-confirm-button { min-height:60px; font-size:20px; }
 }
