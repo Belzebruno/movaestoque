@@ -10,3 +10,23 @@
 @media(max-width:760px){.sidebar{padding:13px 20px;min-height:86px;gap:15px}.brand{width:145px}.nav-item{padding:10px;min-width:44px;justify-content:center}.nav-item>span:not(:first-child){display:none}.nav-item svg{height:21px;width:21px}.topbar{padding:0 20px}.breadcrumb{font-size:12px}.breadcrumb span{margin:0 7px}.demo-pill{font-size:11px}.topbar-right{gap:0}main{padding:30px 20px}.page-heading{gap:16px;align-items:start}h1{font-size:30px;letter-spacing:-1.2px;margin-bottom:12px}.page-heading p{font-size:15px}.withdraw-layout{grid-template-columns:1fr;gap:23px}.destination-panel{padding:25px}.withdraw-panel{position:static;scroll-margin-top:20px}.empty-cart{min-height:210px}.cart-content{min-height:180px;max-height:none}.page-footer{padding:10px 20px 95px;font-size:11px}.page-footer>span:first-child{font-size:14px}.mobile-cart-button:not([hidden]){display:flex;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:440px;justify-content:space-between;z-index:25;box-shadow:0 7px 25px #0003}.notice{align-items:start;font-size:14px;padding:16px}.notice>span{margin-top:3px}.admin-section-toolbar{gap:12px}.admin-section-toolbar .primary-button{padding:12px;font-size:13px}.admin-section-toolbar h2{font-size:16px}.admin-tabs{gap:3px}.filter{padding:11px 14px}.history-top{flex-direction:column;align-items:start;gap:12px}.page-heading #logout{font-size:12px;padding:10px;white-space:nowrap}}
 @media(max-width:420px){.sidebar{padding:12px 16px}.brand{width:139px}.topbar{padding:0 16px}main{padding:27px 16px}.destination-panel{padding:22px 18px}.add-product-row{grid-template-columns:90px 1fr;gap:12px}.add-product-row .primary-button{padding:12px 9px;font-size:13px;gap:7px}.section-heading{margin-bottom:26px}.numbered-field{margin-bottom:21px}.page-heading h1{font-size:28px}.page-heading .eyebrow{font-size:10px;letter-spacing:1.9px}.withdraw-heading,.withdraw-footer{padding:22px 18px}dialog{padding:29px 23px}.review-destination{grid-template-columns:1fr}.review-item{font-size:14px}.page-footer{padding-left:16px;padding-right:16px}.session-disclaimer{font-size:11px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Tela simplificada para celulares e tablets, inclusive em paisagem. */
+@media (max-width: 1100px), (hover: none) and (pointer: coarse) {
+  body { background: #fff; }
+  .app-shell { display: block; min-height: 100dvh; }
+  .sidebar { position: static; width: 100%; min-height: 0; padding: 48px 24px 36px; display: flex; justify-content: center; border: 0; background: #fff; }
+  .sidebar .brand { width: 180px; flex: 0 0 auto; }
+  .sidebar nav, .workspace-label, .sidebar-bottom, .topbar, .page-heading,
+  #data-status, .page-footer, .withdraw-panel, .add-product-row,
+  .withdrawal-form .section-heading, .field-number,
+  #view-admin, #mobile-cart-button, #toast { display: none !important; }
+  .main-shell { margin: 0; }
+  main { max-width: 520px; margin: 0 auto; padding: 0 24px 40px; }
+  .withdraw-layout { display: block; max-width: none; }
+  .destination-panel { padding: 0; border: 0; border-radius: 0; background: #fff; }
+  .numbered-field { margin-bottom: 28px; gap: 10px; }
+  .numbered-field:last-of-type { margin-bottom: 0; }
+  .numbered-field label { font-size: 15px; color: #242424; }
+  .withdrawal-form select { min-height: 58px; background: #fff; border: 1px solid #dcdcdc; border-radius: 6px; padding: 15px; font-size: 16px; }
+}

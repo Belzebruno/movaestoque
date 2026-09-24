@@ -120,3 +120,12 @@ window.addEventListener('beforeunload',event=>{if(state.cart.size){event.prevent
 $('#current-date').textContent=new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'numeric'});hydrateIcons();refreshSelectors();renderCart();navigate('retirada');loadCatalog();api('/api/session').then(s=>state.admin=s.admin).catch(()=>{});setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]')&&!state.busy){loadCatalog();api('/api/session').then(s=>{if(state.admin&&!s.admin)clearAdmin();}).catch(()=>{});}},15000);window.addEventListener('focus',()=>{if(!document.querySelector('dialog[open]'))loadCatalog();});
 if(document.modelContext?.registerTool){const lifecycle=new AbortController();try{Promise.resolve(document.modelContext.registerTool({name:'stage_withdrawal_item',title:'Adicionar insumo à lista',description:'Adiciona um produto à lista de retirada, sem confirmar ou alterar estoque.',inputSchema:{type:'object',properties:{code:{type:'string'},quantity:{type:'number',exclusiveMinimum:0,maximum:99999}},required:['code','quantity'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||typeof input.code!=='string'||typeof input.quantity!=='number')throw Error('Informe código e quantidade.');addProduct(input.code,input.quantity);navigate('retirada');return{code:input.code,quantity:state.cart.get(input.code),status:'staged'};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});}
 
+
+const simplifiedScreen = window.matchMedia('(max-width: 1100px), (hover: none) and (pointer: coarse)');
+function applySimplifiedScreen() {
+ if (!simplifiedScreen.matches) return;
+ document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
+ if (state.view !== 'retirada') navigate('retirada');
+}
+simplifiedScreen.addEventListener('change', applySimplifiedScreen);
+applySimplifiedScreen();
