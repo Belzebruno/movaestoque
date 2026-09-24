@@ -67,10 +67,10 @@ async function confirmWithdrawal(){
  if(!state.reviewing||state.busy)return;const r=validateWithdrawal();if(r.error)return;
  const data={workId:$('#work').value,personId:$('#person').value,items:[...state.cart].map(([id,quantity])=>({id,quantity,unit:products.find(p=>p.id===id).unit}))};
  const signature=JSON.stringify(data);if(state.pending?.signature!==signature)state.pending={signature,body:{...data,requestId:requestId()}};
- state.busy=true;const button=$('#confirm-withdrawal');button.disabled=true;button.textContent='Registrando…';
+ state.busy=true;const button=$('#confirm-withdrawal');button.disabled=true;button.textContent='Registrando…';const mobileQuantity=$('#mobile-review-quantity');if(mobileQuantity)mobileQuantity.disabled=true;
  try{const record=await api('/api/retiradas','POST',state.pending.body);state.pending=null;state.reviewing=false;state.cart.clear();$('#work').value='';$('#person').value='';$('#product').value='';renderCart();
  $('#review-body').innerHTML='<div class="success-content"><div class="success-icon">'+icon('check')+'</div><h2 id="review-title">Retirada registrada!</h2><p><strong>'+escapeHTML(record.id)+'</strong> · '+record.items.length+' insumo(s)<br>'+escapeHTML(record.work)+'<br><small>Estoque atualizado e registro salvo.</small></p><button class="primary-button" id="new-withdrawal">Nova retirada</button></div>';$('#new-withdrawal').focus();await loadCatalog();
- }catch(error){let el=$('#withdraw-error');if(!el){el=document.createElement('p');el.id='withdraw-error';el.className='form-error';el.setAttribute('role','alert');$('#review-body').append(el);}el.textContent=error.message;button.disabled=false;button.textContent='Confirmar retirada';}finally{state.busy=false;}
+ }catch(error){let el=$('#withdraw-error');if(!el){el=document.createElement('p');el.id='withdraw-error';el.className='form-error';el.setAttribute('role','alert');$('#review-body').append(el);}el.textContent=error.message;button.disabled=false;button.textContent='Confirmar retirada';if(mobileQuantity)mobileQuantity.disabled=false;}finally{state.busy=false;}
 }
 function dataset(type=state.tab){return type==='insumos'?products:type==='obras'?works:people;}
 function adminOnly(){if(!state.admin){$('#login-dialog').showModal();return false;}return true;}
@@ -129,3 +129,27 @@ function applySimplifiedScreen() {
 }
 simplifiedScreen.addEventListener('change', applySimplifiedScreen);
 applySimplifiedScreen();
+
+$('#mobile-confirm').addEventListener('click',()=>{
+ if(state.busy)return;
+ const error=$('#mobile-error');error.hidden=true;
+ try{
+  if(!state.ready)throw Error('Sem conexão com o estoque. Atualize a página e tente novamente.');
+  if(!$('#work').value){$('#work').focus();throw Error('Selecione a obra de destino.');}
+  if(!$('#product').value){$('#product').focus();throw Error('Selecione o produto.');}
+  if(!$('#person').value){$('#person').focus();throw Error('Selecione quem está retirando.');}
+  const product=products.find(p=>p.id===$('#product').value);
+  if(!product||product.stock<=0)throw Error('Produto sem saldo disponível.');
+  const quantity=fractional(product)?Math.min(1,product.stock):1;
+  state.cart.clear();addProduct(product.id,quantity);openReview();
+  const field=document.createElement('div');field.className='field';
+  field.innerHTML='<label for="mobile-review-quantity">Quantidade</label><select id="mobile-review-quantity">'+quantityOptions(product,quantity)+'</select>';
+  $('#review-body .review-note').before(field);
+  $('#mobile-review-quantity').addEventListener('change',event=>{
+   if(state.busy)return;
+   const quantity=Number(event.target.value);state.cart.set(product.id,quantity);
+   $('#review-body .review-item strong').textContent=formatQuantity(quantity)+' '+product.unit;
+   renderCart();
+  });
+ }catch(reason){error.textContent=reason.message;error.hidden=false;}
+});

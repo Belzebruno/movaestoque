@@ -49,7 +49,7 @@ O Admin pode consultar o histórico. As sessões duram oito horas e, no Neon,
 continuam válidas mesmo quando a Vercel troca de instância.
 
 No celular e tablet, a tela mostra apenas a logo e três seletores, como solicitado.
-Essa tela ainda não tem botão para confirmar retiradas; selecionar não altera estoque.
+Toque em Confirmar retirada, confira os dados e a quantidade e confirme para salvar.
 No PC, adicione os itens, confira e confirme para registrar e reduzir o saldo.
 
 A senha inicial alternativa pode ser definida por `MOVA_ADMIN_PASSWORD` antes
