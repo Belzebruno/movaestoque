@@ -2,7 +2,20 @@
   "name": "controle-de-estoque",
   "version": "1.0.0",
   "private": true,
-  "description": "Controle de estoque MOVA com SQLite",
-  "scripts": { "start": "node painel/server.mjs", "check": "node --check painel/dist/app.js && node --check painel/server.mjs && node --check painel/database.mjs && node --check painel/http-app.mjs", "test": "node --test painel/tests/*.test.mjs" },
-  "engines": { "node": ">=24.0.0" }
+  "description": "Controle de estoque MOVA com PostgreSQL / Neon",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env.local painel/server.mjs",
+    "check": "node --check painel/dist/app.js && node --check painel/server.mjs && node --check painel/database.mjs && node --check painel/http-app.mjs && node --check painel/postgres.mjs && node --check api/index.mjs",
+    "test": "node --test painel/tests/*.test.mjs",
+    "db:migrate": "node --env-file-if-exists=.env.local painel/migrate.mjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@neon/config": "^1.7.3",
+    "@neon/env": "^1.4.4",
+    "@vercel/functions": "^3.9.9",
+    "pg": "^8.23.0"
+  }
 }

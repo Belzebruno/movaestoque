@@ -1,0 +1,12 @@
+.git
+.build
+.agents
+.codex
+node_modules
+.env*
+.neon
+painel/data
+painel/tests
+*.log
+painel/*.log
+outputs

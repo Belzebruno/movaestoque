@@ -7,3 +7,8 @@ outputs/
 .env
 .env.*
 !.env.example
+.neon
+
+.vercel
+.env*
+!.env.example
