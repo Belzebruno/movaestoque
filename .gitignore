@@ -1,0 +1,9 @@
+painel/data/
+.build/
+node_modules/
+*.log
+
+outputs/
+.env
+.env.*
+!.env.example
