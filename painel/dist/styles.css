@@ -133,16 +133,17 @@
 @media (max-width:1100px), (hover:none) and (pointer:coarse) {
  .app-shell { height:100dvh; min-height:0; }
  .sidebar { padding:16px 20px; }
- .sidebar .brand { width:clamp(150px,25vw,210px); }
+ .sidebar .brand { width:clamp(210px,42vw,300px); }
  .main-shell,main,#view-retirada,.withdraw-layout,.catalog-column { min-height:0; }
  main { padding:0 20px max(12px,env(safe-area-inset-bottom)); }
  .withdraw-layout { overflow-y:hidden; }
  .withdrawal-form { flex:1; justify-content:space-evenly; gap:12px; padding:0; }
  .withdrawal-form .numbered-field,.add-product-row .field { gap:6px; }
- .numbered-field label,.add-product-row label { font-size:18px; }
- .withdrawal-form select { min-height:52px; padding:10px 12px; font-size:20px; border-radius:8px; }
- .withdrawal-form .add-product-row { grid-template-columns:110px 1fr; gap:14px; }
- .add-product-row .primary-button,.withdraw-footer .primary-button { min-height:54px; padding:10px; font-size:18px; border-radius:8px; }
+ .numbered-field label,.add-product-row label { font-size:clamp(20px,2.5dvh,24px); }
+ .withdrawal-form select { min-height:clamp(56px,8dvh,72px); padding:12px 14px; font-size:clamp(22px,3dvh,26px); border-radius:8px; }
+ .withdrawal-form .add-product-row { grid-template-columns:clamp(110px,22vw,150px) 1fr; gap:14px; }
+ .add-product-row .primary-button,.withdraw-footer .primary-button { min-height:clamp(58px,8dvh,72px); padding:10px; font-size:clamp(20px,2.7dvh,24px); border-radius:8px; }
+ .add-product-row .primary-button svg,.withdraw-footer .primary-button svg { width:24px; height:24px; }
  .mobile-feedback { font-size:15px; margin:8px 0; }
  .withdraw-heading { padding:10px 0; }
  .withdraw-heading h2 { font-size:22px; }
