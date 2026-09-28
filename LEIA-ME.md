@@ -49,7 +49,7 @@ O Admin pode consultar o histórico. As sessões duram oito horas e, no Neon,
 continuam válidas mesmo quando a Vercel troca de instância.
 
 No celular e tablet, selecione obra, funcionário e produtos para adicionar à lista.
-Deslize para o lado ou toque em Minha lista para ajustar quantidades e conferir.
+Deslize para o lado para ajustar quantidades e conferir.
 Confirme a retirada com a senha pessoal de quatro dígitos para salvar.
 No PC, adicione os itens, confira e confirme para registrar e reduzir o saldo.
 
@@ -75,7 +75,7 @@ Credenciais, banco local e arquivos temporários ficam fora do Git e do deploy.
 
 No tablet, selecione obra e funcionário, escolha produto e quantidade e toque
 em Adicionar à retirada. Repita para outros produtos. Deslize horizontalmente
-ou use Minha lista para conferir, ajustar quantidades ou remover itens.
+para conferir, ajustar quantidades ou remover itens.
 Depois de conferir, a confirmação abre o teclado numérico de senha.
 
 Cada funcionário cadastra um PIN de exatamente quatro dígitos, confirmado duas
@@ -89,3 +89,5 @@ O primeiro cadastro de PIN não comprova identidade: acompanhe esse primeiro
 acesso para que cada funcionário cadastre o próprio PIN. O cadastro do PIN é
 salvo na autorização; caso o estoque impeça a retirada, ele permanece válido
 para a próxima tentativa. A migração é aditiva e preserva cadastros e histórico.
+
+No mobile, apenas a lista de itens rola verticalmente; o botão de conferência permanece visível.
