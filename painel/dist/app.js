@@ -70,7 +70,7 @@ async function confirmWithdrawal(){
  const data={workId:$('#work').value,personId:$('#person').value,items:[...state.cart].map(([id,quantity])=>({id,quantity,unit:products.find(p=>p.id===id).unit}))};
  const signature=JSON.stringify(data);if(state.pending?.signature!==signature)state.pending={signature,body:{...data,requestId:requestId()}};
  state.busy=true;const button=$('#confirm-withdrawal');button.disabled=true;button.textContent='Registrando…';const mobileQuantity=$('#mobile-review-quantity');if(mobileQuantity)mobileQuantity.disabled=true;
- try{const record=await api('/api/retiradas','POST',{...state.pending.body,...credentials});state.pending=null;state.reviewing=false;state.cart.clear();showMobilePage(0);$('#mobile-added').textContent='';$('#work').value='';$('#person').value='';$('#product').value='';renderCart();
+ try{const record=await api('/api/retiradas','POST',{...state.pending.body,...credentials});state.pending=null;state.reviewing=false;state.cart.clear();showMobilePage(0);$('#work').value='';$('#person').value='';$('#product').value='';renderCart();
  $('#review-body').innerHTML='<div class="success-content"><div class="success-icon">'+icon('check')+'</div><h2 id="review-title">Retirada registrada!</h2><p><strong>'+escapeHTML(record.id)+'</strong> · '+record.items.length+' insumo(s)<br>'+escapeHTML(record.work)+'<br><small>Estoque atualizado e registro salvo.</small></p><button class="primary-button" id="new-withdrawal">Nova retirada</button></div>';$('#new-withdrawal').focus();await loadCatalog();
  }catch(error){let el=$('#withdraw-error');if(!el){el=document.createElement('p');el.id='withdraw-error';el.className='form-error';el.setAttribute('role','alert');$('#review-body').append(el);}el.textContent=error.message;button.disabled=false;button.textContent='Confirmar retirada';if(mobileQuantity)mobileQuantity.disabled=false;}finally{state.busy=false;}
 }
@@ -105,7 +105,7 @@ document.addEventListener('click',event=>{const b=event.target.closest('button')
  if(b.dataset.adminTab&&adminOnly()){state.tab=b.dataset.adminTab;loadAdmin();}
  if(b.dataset.edit)openEntry(b.dataset.edit);if(b.dataset.delete)requestDelete(b.dataset.delete);
  if(b.dataset.remove){state.cart.delete(b.dataset.remove);renderCart();}
- if(b.id==='add-selected'){try{addProduct($('#product').value,Number($('#quantity').value));$('#selection-error').hidden=true;toast('Produto adicionado à retirada.');$('#mobile-added').textContent='Produto adicionado. Selecione outro ou deslize para conferir a lista.';$('#mobile-error').hidden=true;}catch(error){$('#selection-error').textContent=error.message;$('#selection-error').hidden=false;$('#product').focus();}}
+ if(b.id==='add-selected'){try{addProduct($('#product').value,Number($('#quantity').value));$('#selection-error').hidden=true;showItemAdded();$('#mobile-error').hidden=true;}catch(error){$('#selection-error').textContent=error.message;$('#selection-error').hidden=false;$('#product').focus();}}
  if(b.id==='review-button')openReview();if(b.id==='refresh-data')loadCatalog().then(()=>{if(state.view==='admin')loadAdmin();});if(b.id==='confirm-withdrawal')confirmWithdrawal();if(b.id==='back-to-list'||b.id==='new-withdrawal')$('#review-dialog').close();
  if(b.id==='new-entry')openEntry();if(b.id==='confirm-delete')confirmDelete();if(b.id==='cancel-delete'){$('#delete-dialog').close();state.deleting=null;}
  if(b.id==='logout')logout();
@@ -182,3 +182,5 @@ $('#pin-next').addEventListener('click',()=>{
  if(pinFirst!==pinDigits){pinDigits='';$('#pin-error').textContent='As senhas não coincidem. Digite novamente a senha escolhida.';$('#pin-error').hidden=false;drawPin();return;}
  finishPin({pin:pinFirst,pinConfirm:pinDigits});
 });
+
+function showItemAdded(){const popup=$("#item-added-popup");popup.hidden=false;clearTimeout(showItemAdded.timer);showItemAdded.timer=setTimeout(()=>popup.hidden=true,1800);}

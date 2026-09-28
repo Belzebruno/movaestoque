@@ -198,3 +198,10 @@
  .cart-item .field label { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
  .cart-item select { min-height:44px; font-size:16px; padding:8px; }
 }
+/* Confirmação visual sem bloquear os próximos toques. */
+#item-added-popup { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100; display:flex; flex-direction:column; align-items:center; gap:16px; width:min(300px,calc(100vw - 48px)); padding:28px 24px; border:1px solid #d5e8d9; border-radius:18px; background:#fff; box-shadow:0 14px 60px #0003; pointer-events:none; animation:item-added-in .18s ease-out; }
+#item-added-popup strong { font-size:24px; color:#202020; }
+.item-added-check { display:grid; place-items:center; width:64px; height:64px; border-radius:50%; background:#e5f5e9; color:#229447; }
+.item-added-check svg { width:36px; height:36px; }
+@keyframes item-added-in { from { opacity:0; transform:translate(-50%,-45%) scale(.95); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+@media(prefers-reduced-motion:reduce) { #item-added-popup { animation:none; } }
