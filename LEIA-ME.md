@@ -48,8 +48,9 @@ validado no servidor. A exclusão preserva os nomes no histórico de retiradas.
 O Admin pode consultar o histórico. As sessões duram oito horas e, no Neon,
 continuam válidas mesmo quando a Vercel troca de instância.
 
-No celular e tablet, a tela mostra apenas a logo e três seletores, como solicitado.
-Toque em Confirmar retirada, confira os dados e a quantidade e confirme para salvar.
+No celular e tablet, selecione obra, funcionário e produtos para adicionar à lista.
+Deslize para o lado ou toque em Minha lista para ajustar quantidades e conferir.
+Confirme a retirada com a senha pessoal de quatro dígitos para salvar.
 No PC, adicione os itens, confira e confirme para registrar e reduzir o saldo.
 
 A senha inicial alternativa pode ser definida por `MOVA_ADMIN_PASSWORD` antes
@@ -69,3 +70,22 @@ O banco Neon é compartilhado pelos dispositivos e permanece após um deploy.
 Use os recursos de backup/restauração do Neon para ele.
 Para o SQLite local, pare o servidor antes de copiar `painel/data/estoque.sqlite`.
 Credenciais, banco local e arquivos temporários ficam fora do Git e do deploy.
+
+## PIN dos funcionários e lista mobile
+
+No tablet, selecione obra e funcionário, escolha produto e quantidade e toque
+em Adicionar à retirada. Repita para outros produtos. Deslize horizontalmente
+ou use Minha lista para conferir, ajustar quantidades ou remover itens.
+Depois de conferir, a confirmação abre o teclado numérico de senha.
+
+Cada funcionário cadastra um PIN de exatamente quatro dígitos, confirmado duas
+vezes, na primeira autorização. Nas seguintes, informa o PIN uma vez.
+A senha é validada no servidor em toda retirada, incluindo reenvios, e fica
+armazenada como hash com salt na tabela `funcionario_pins`. O PIN não é salvo
+no navegador, no histórico nem retornado pelo catálogo. Cinco erros bloqueiam
+esse funcionário por 15 minutos. Fechar o teclado cancela a autorização.
+
+O primeiro cadastro de PIN não comprova identidade: acompanhe esse primeiro
+acesso para que cada funcionário cadastre o próprio PIN. O cadastro do PIN é
+salvo na autorização; caso o estoque impeça a retirada, ele permanece válido
+para a próxima tentativa. A migração é aditiva e preserva cadastros e histórico.

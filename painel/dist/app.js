@@ -57,18 +57,20 @@ function fillSelect(selector,items,placeholder,label){const el=$(selector),value
 function refreshSelectors(){fillSelect('#work',works,'Selecione a obra');fillSelect('#person',people,'Selecione o funcionário');fillSelect('#product',products,'Selecione o produto',p=>`${p.name}${p.detail?' · '+p.detail:''} — ${formatQuantity(p.stock)} ${p.unit} disponíveis`);refreshQuantity();}
 function refreshQuantity(){const p=products.find(p=>p.id===$('#product').value),current=Number($('#quantity').value)||1;$('#quantity').innerHTML=quantityOptions(p,fractional(p)||Number.isInteger(current)?current:1);$('#quantity-unit').textContent=p?`(${p.unit})`:'';$('#quantity').disabled=!p;}
 function renderCart(){
+ $('#mobile-list-count').textContent=state.cart.size;$('#mobile-destination').textContent=[works.find(p=>p.id===$('#work').value)?.name,people.find(p=>p.id===$('#person').value)?.name].filter(Boolean).join(' · ');
  $('#cart-badge').textContent=state.cart.size;$('#cart-total').textContent=`${state.cart.size} ${state.cart.size===1?'tipo':'tipos'}`;$('#review-button').disabled=!state.cart.size||!state.ready;$('#mobile-cart-button').hidden=!state.cart.size||state.view!=='retirada';$('#mobile-cart-count').textContent=`${state.cart.size} insumos`;
  $('#cart-content').innerHTML=state.cart.size?[...state.cart].map(([id,q])=>{const p=products.find(p=>p.id===id);return `<div class="cart-item"><div class="cart-item-header"><div><h3>${escapeHTML(p.name)}</h3><p class="product-meta">${escapeHTML(p.detail)}</p></div><button class="icon-button" data-remove="${id}" aria-label="Remover ${escapeHTML(p.name)} da retirada">${icon('trash')}</button></div><div class="field"><label for="qty-${id}">Quantidade (${p.unit})</label><select id="qty-${id}" data-quantity="${id}" aria-label="Quantidade de ${escapeHTML(p.name)}">${quantityOptions(p,q)}</select></div></div>`;}).join(''):`<div class="empty-cart"><div class="empty-cart-icon">${icon('clipboard')}</div><h3>Sua lista começa aqui</h3><p>Selecione um produto e toque em “Adicionar à retirada”.</p></div>`;
 }
 function addProduct(id,q){if(!state.ready)throw Error('Aguarde a conexão com o servidor.');const p=products.find(p=>p.id===id);if(!p)throw Error('Selecione um produto.');const total=Number(((state.cart.get(id)||0)+q).toFixed(3));if(!Number.isFinite(q)||q<=0||total>99999||(!fractional(p)&&!Number.isInteger(q))||Math.abs(q*1000-Math.round(q*1000))>1e-6)throw Error('Quantidade inválida.');if(total>p.stock)throw Error(`Saldo insuficiente. Disponível: ${formatQuantity(p.stock)} ${p.unit}.`);state.cart.set(id,total);renderCart();}
 function validateWithdrawal(){const work=works.find(p=>p.id===$('#work').value),person=people.find(p=>p.id===$('#person').value);if(!work)return{error:'Selecione a obra de destino.',focus:'#work'};if(!person)return{error:'Selecione quem está retirando.',focus:'#person'};if(!state.cart.size)return{error:'Adicione pelo menos um produto.'};return{work:work.name,person:person.name};}
-function openReview(){const r=validateWithdrawal();if(r.error){$('#form-error').textContent=r.error;$('#form-error').hidden=false;if(r.focus)$(r.focus).focus();return;}state.reviewing=true;$('#form-error').hidden=true;$('#review-body').innerHTML=`<div class="dialog-heading"><span class="eyebrow">CONFERÊNCIA</span><h2 id="review-title">Está tudo certo?</h2><p>Confira os produtos e as quantidades.</p></div><div class="review-destination"><div><small>Obra</small><strong>${escapeHTML(r.work)}</strong></div><div><small>Responsável</small><strong>${escapeHTML(r.person)}</strong></div></div><div class="review-items">${[...state.cart].map(([id,q])=>{const p=products.find(p=>p.id===id);return`<div class="review-item"><span>${escapeHTML(p.name)}</span><strong>${formatQuantity(q)} ${p.unit}</strong></div>`;}).join('')}</div><p class="review-note">Ao confirmar, os materiais serão descontados do estoque.</p><div class="review-actions"><button class="secondary-button" id="back-to-list">Voltar</button><button class="primary-button" id="confirm-withdrawal">${icon('check')}Confirmar retirada</button></div>`;$('#review-dialog').showModal();}
+function openReview(){const r=validateWithdrawal();if(r.error){$('#form-error').textContent=r.error;$('#form-error').hidden=false;if(r.focus){showMobilePage(0);$(r.focus).focus();$('#mobile-error').textContent=r.error;$('#mobile-error').hidden=false;}return;}state.reviewing=true;$('#form-error').hidden=true;$('#review-body').innerHTML=`<div class="dialog-heading"><span class="eyebrow">CONFERÊNCIA</span><h2 id="review-title">Está tudo certo?</h2><p>Confira os produtos e as quantidades.</p></div><div class="review-destination"><div><small>Obra</small><strong>${escapeHTML(r.work)}</strong></div><div><small>Responsável</small><strong>${escapeHTML(r.person)}</strong></div></div><div class="review-items">${[...state.cart].map(([id,q])=>{const p=products.find(p=>p.id===id);return`<div class="review-item"><span>${escapeHTML(p.name)}</span><strong>${formatQuantity(q)} ${p.unit}</strong></div>`;}).join('')}</div><p class="review-note">Ao confirmar, os materiais serão descontados do estoque.</p><div class="review-actions"><button class="secondary-button" id="back-to-list">Voltar</button><button class="primary-button" id="confirm-withdrawal">${icon('check')}Confirmar retirada</button></div>`;$('#review-dialog').showModal();}
 async function confirmWithdrawal(){
  if(!state.reviewing||state.busy)return;const r=validateWithdrawal();if(r.error)return;
+ const credentials=await requestWorkerPin();if(!credentials)return;
  const data={workId:$('#work').value,personId:$('#person').value,items:[...state.cart].map(([id,quantity])=>({id,quantity,unit:products.find(p=>p.id===id).unit}))};
  const signature=JSON.stringify(data);if(state.pending?.signature!==signature)state.pending={signature,body:{...data,requestId:requestId()}};
  state.busy=true;const button=$('#confirm-withdrawal');button.disabled=true;button.textContent='Registrando…';const mobileQuantity=$('#mobile-review-quantity');if(mobileQuantity)mobileQuantity.disabled=true;
- try{const record=await api('/api/retiradas','POST',state.pending.body);state.pending=null;state.reviewing=false;state.cart.clear();$('#work').value='';$('#person').value='';$('#product').value='';renderCart();
+ try{const record=await api('/api/retiradas','POST',{...state.pending.body,...credentials});state.pending=null;state.reviewing=false;state.cart.clear();showMobilePage(0);$('#mobile-added').textContent='';$('#work').value='';$('#person').value='';$('#product').value='';renderCart();
  $('#review-body').innerHTML='<div class="success-content"><div class="success-icon">'+icon('check')+'</div><h2 id="review-title">Retirada registrada!</h2><p><strong>'+escapeHTML(record.id)+'</strong> · '+record.items.length+' insumo(s)<br>'+escapeHTML(record.work)+'<br><small>Estoque atualizado e registro salvo.</small></p><button class="primary-button" id="new-withdrawal">Nova retirada</button></div>';$('#new-withdrawal').focus();await loadCatalog();
  }catch(error){let el=$('#withdraw-error');if(!el){el=document.createElement('p');el.id='withdraw-error';el.className='form-error';el.setAttribute('role','alert');$('#review-body').append(el);}el.textContent=error.message;button.disabled=false;button.textContent='Confirmar retirada';if(mobileQuantity)mobileQuantity.disabled=false;}finally{state.busy=false;}
 }
@@ -99,11 +101,12 @@ async function confirmDelete(){
  catch(error){$('#delete-description').textContent=error.message;await loadCatalog();renderAdmin();}finally{state.busy=false;$('#confirm-delete').disabled=false;}
 }
 document.addEventListener('click',event=>{const b=event.target.closest('button');if(!b)return;
+ if(b.dataset.mobilePage!==undefined)showMobilePage(Number(b.dataset.mobilePage));
  if(b.dataset.view)navigate(b.dataset.view);
  if(b.dataset.adminTab&&adminOnly()){state.tab=b.dataset.adminTab;loadAdmin();}
  if(b.dataset.edit)openEntry(b.dataset.edit);if(b.dataset.delete)requestDelete(b.dataset.delete);
  if(b.dataset.remove){state.cart.delete(b.dataset.remove);renderCart();}
- if(b.id==='add-selected'){try{addProduct($('#product').value,Number($('#quantity').value));$('#selection-error').hidden=true;toast('Produto adicionado à retirada.');}catch(error){$('#selection-error').textContent=error.message;$('#selection-error').hidden=false;$('#product').focus();}}
+ if(b.id==='add-selected'){try{addProduct($('#product').value,Number($('#quantity').value));$('#selection-error').hidden=true;toast('Produto adicionado à retirada.');$('#mobile-added').textContent='Produto adicionado. Selecione outro ou deslize para conferir a lista.';$('#mobile-error').hidden=true;}catch(error){$('#selection-error').textContent=error.message;$('#selection-error').hidden=false;$('#product').focus();}}
  if(b.id==='review-button')openReview();if(b.id==='refresh-data')loadCatalog().then(()=>{if(state.view==='admin')loadAdmin();});if(b.id==='confirm-withdrawal')confirmWithdrawal();if(b.id==='back-to-list'||b.id==='new-withdrawal')$('#review-dialog').close();
  if(b.id==='new-entry')openEntry();if(b.id==='confirm-delete')confirmDelete();if(b.id==='cancel-delete'){$('#delete-dialog').close();state.deleting=null;}
  if(b.id==='logout')logout();
@@ -133,32 +136,54 @@ if(document.modelContext?.registerTool){const lifecycle=new AbortController();tr
 const simplifiedScreen = window.matchMedia('(max-width: 1100px), (hover: none) and (pointer: coarse)');
 function applySimplifiedScreen() {
  if (!simplifiedScreen.matches) return;
- document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
+ document.querySelectorAll('#login-dialog[open],#product-dialog[open],#delete-dialog[open]').forEach(dialog => dialog.close());
  if (state.view !== 'retirada') navigate('retirada');
 }
 simplifiedScreen.addEventListener('change', applySimplifiedScreen);
 applySimplifiedScreen();
 
-$('#mobile-confirm').addEventListener('click',()=>{
- if(state.busy)return;
- const error=$('#mobile-error');error.hidden=true;
+
+function showMobilePage(page){
+ if(!simplifiedScreen.matches)return;
+ const layout=$('.withdraw-layout');layout.scrollTo({left:page*layout.clientWidth,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+}
+$('#mobile-confirm').addEventListener('click',()=>showMobilePage(1));
+$('#work').addEventListener('change',renderCart);$('#person').addEventListener('change',renderCart);
+$('.withdraw-layout').addEventListener('scroll',()=>{
+ const page=Math.round($('.withdraw-layout').scrollLeft/$('.withdraw-layout').clientWidth);
+ document.querySelectorAll('[data-mobile-page]').forEach(button=>{if(Number(button.dataset.mobilePage)===page)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');});
+},{passive:true});
+let pinPrompt=null,pinDigits='',pinFirst='';
+function drawPin(){
+ $('#pin-dots').textContent=Array.from({length:4},(_,i)=>i<pinDigits.length?'●':'○').join(' ');
+ $('#pin-dots').setAttribute('aria-label',pinDigits.length+' de 4 dígitos preenchidos');
+ $('#pin-next').disabled=pinDigits.length!==4;
+}
+async function requestWorkerPin(){
+ if(pinPrompt)return null;
+ const person=people.find(p=>p.id===$('#person').value);if(!person)return null;
+ const button=$('#confirm-withdrawal');button.disabled=true;
  try{
-  if(!state.ready)throw Error('Sem conexão com o estoque. Atualize a página e tente novamente.');
-  if(!$('#work').value){$('#work').focus();throw Error('Selecione a obra de destino.');}
-  if(!$('#product').value){$('#product').focus();throw Error('Selecione o produto.');}
-  if(!$('#person').value){$('#person').focus();throw Error('Selecione quem está retirando.');}
-  const product=products.find(p=>p.id===$('#product').value);
-  if(!product||product.stock<=0)throw Error('Produto sem saldo disponível.');
-  const quantity=fractional(product)?Math.min(1,product.stock):1;
-  state.cart.clear();addProduct(product.id,quantity);openReview();
-  const field=document.createElement('div');field.className='field';
-  field.innerHTML='<label for="mobile-review-quantity">Quantidade</label><select id="mobile-review-quantity">'+quantityOptions(product,quantity)+'</select>';
-  $('#review-body .review-note').before(field);
-  $('#mobile-review-quantity').addEventListener('change',event=>{
-   if(state.busy)return;
-   const quantity=Number(event.target.value);state.cart.set(product.id,quantity);
-   $('#review-body .review-item strong').textContent=formatQuantity(quantity)+' '+product.unit;
-   renderCart();
-  });
- }catch(reason){error.textContent=reason.message;error.hidden=false;}
+  const status=await api('/api/funcionarios/'+person.id+'/pin');
+  pinDigits='';pinFirst='';$('#pin-error').hidden=true;
+  $('#pin-person').textContent=person.name;
+  $('#pin-title').textContent=status.registered?'Digite sua senha':'Cadastre sua senha';
+  $('#pin-instruction').textContent=status.registered?'Digite os 4 dígitos para autorizar esta retirada.':'Primeiro acesso: escolha uma senha de 4 dígitos.';
+  $('#pin-next').textContent=status.registered?'Autorizar retirada':'Continuar';
+  const result=new Promise(resolve=>{pinPrompt={resolve,registered:status.registered};});drawPin();$('#pin-dialog').showModal();return await result;
+ }catch(error){let el=$('#withdraw-error');if(!el){el=document.createElement('p');el.id='withdraw-error';el.className='form-error';$('#review-body').append(el);}el.textContent=error.message;return null;}
+ finally{button.disabled=false;}
+}
+function finishPin(value){const current=pinPrompt;pinPrompt=null;pinDigits='';pinFirst='';drawPin();$('#pin-dialog').close();current?.resolve(value);}
+function pinInput(key){if(!pinPrompt)return;if(/^\d$/.test(key)&&pinDigits.length<4)pinDigits+=key;else if(key==='Backspace')pinDigits=pinDigits.slice(0,-1);drawPin();}
+$('#pin-dialog').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.pinDigit!==undefined)pinInput(button.dataset.pinDigit);if(button.id==='pin-backspace')pinInput('Backspace');if(button.id==='pin-clear'){pinDigits='';drawPin();}});
+$('#pin-dialog').addEventListener('keydown',event=>{if(/^\d$/.test(event.key)||event.key==='Backspace'){event.preventDefault();pinInput(event.key);}});
+$('#pin-cancel').addEventListener('click',()=>finishPin(null));
+$('#pin-dialog').addEventListener('cancel',event=>{event.preventDefault();finishPin(null);});
+$('#pin-next').addEventListener('click',()=>{
+ if(!pinPrompt||pinDigits.length!==4)return;
+ if(pinPrompt.registered){finishPin({pin:pinDigits});return;}
+ if(!pinFirst){pinFirst=pinDigits;pinDigits='';$('#pin-title').textContent='Confirme sua senha';$('#pin-instruction').textContent='Digite os mesmos 4 dígitos novamente.';$('#pin-next').textContent='Cadastrar e autorizar';drawPin();return;}
+ if(pinFirst!==pinDigits){pinDigits='';$('#pin-error').textContent='As senhas não coincidem. Digite novamente a senha escolhida.';$('#pin-error').hidden=false;drawPin();return;}
+ finishPin({pin:pinFirst,pinConfirm:pinDigits});
 });

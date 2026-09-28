@@ -1,3 +1,4 @@
+import {checkWorkerPin} from './worker-pin.mjs';
 import {Pool} from 'pg';
 import {attachDatabasePool} from '@vercel/functions';
 import {randomBytes,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
@@ -33,6 +34,22 @@ export function openPostgres(connectionString=process.env.DATABASE_URL) {
     const salt=randomBytes(32).toString('hex');
     await client.query('INSERT INTO administradores(usuario,salt,senha_hash) VALUES ($1,$2,$3) ON CONFLICT (usuario) DO NOTHING',['admin',salt,scryptSync(process.env.MOVA_ADMIN_PASSWORD||'12345',salt,64).toString('hex')]);
    });
+  },
+  async pinStatus(id){
+   const numeric=idOf('funcionarios',id);
+   const {rows:[person]}=await query('SELECT id FROM funcionarios WHERE id=$1',[numeric]);if(!person)fail(404,'Funcionário não encontrado.');
+   const result=await query('SELECT 1 FROM funcionario_pins WHERE funcionario_id=$1',[numeric]);return {registered:result.rowCount>0};
+  },
+  async authorizeWorker(body){
+   const numeric=idOf('funcionarios',body.personId);
+   const result=await transaction(async client=>{
+    const {rows:[person]}=await client.query('SELECT id FROM funcionarios WHERE id=$1 FOR UPDATE',[numeric]);if(!person)fail(404,'Funcionário não encontrado.');
+    const {rows:[row]}=await client.query('SELECT * FROM funcionario_pins WHERE funcionario_id=$1',[numeric]);
+    const result=checkWorkerPin(row,body);
+    if(result.save){const p=result.save;await client.query('INSERT INTO funcionario_pins(funcionario_id,salt,pin_hash,tentativas,bloqueado_ate) VALUES ($1,$2,$3,$4,$5) ON CONFLICT(funcionario_id) DO UPDATE SET tentativas=$4,bloqueado_ate=$5',[numeric,p.salt,p.hash,p.failures,p.blocked]);}
+    return result;
+   });
+   if(result.error)throw result.error;
   },
   async authenticate(username,password){
    if(typeof username!=='string'||typeof password!=='string'||password.length>256)return false;
@@ -94,6 +111,7 @@ export function openPostgres(connectionString=process.env.DATABASE_URL) {
    const workId=idOf('obras',body.workId),personId=idOf('funcionarios',body.personId);
    const items=body.items.map(i=>{if(!i||typeof i!=='object'||!units.includes(i.unit)||typeof i.quantity!=='number')fail(400,'Insumo inválido.');return{id:idOf('insumos',i.id),quantity:i.quantity,unit:i.unit};}).sort((a,b)=>a.id-b.id);
    if(new Set(items.map(i=>i.id)).size!==items.length)fail(400,'Um insumo aparece mais de uma vez.');
+   await api.authorizeWorker(body);
    const hash=createHash('sha256').update(JSON.stringify({workId,personId,items})).digest('hex');
    return transaction(async client=>{
     // Serialize retries with the same key, then lock products in stable ID order.

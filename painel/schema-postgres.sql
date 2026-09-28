@@ -58,3 +58,11 @@ CREATE INDEX IF NOT EXISTS idx_retirada_funcionario ON retiradas(funcionario_id)
 CREATE TABLE IF NOT EXISTS sessoes_admin (token_hash TEXT PRIMARY KEY, expira_em TIMESTAMPTZ NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_sessoes_expira ON sessoes_admin(expira_em);
 CREATE TABLE IF NOT EXISTS tentativas_login (chave TEXT PRIMARY KEY, total INTEGER NOT NULL, expira_em TIMESTAMPTZ NOT NULL);
+
+CREATE TABLE IF NOT EXISTS funcionario_pins (
+ funcionario_id INTEGER PRIMARY KEY REFERENCES funcionarios(id) ON DELETE CASCADE,
+ salt TEXT NOT NULL,
+ pin_hash TEXT NOT NULL,
+ tentativas INTEGER NOT NULL DEFAULT 0,
+ bloqueado_ate BIGINT NOT NULL DEFAULT 0
+);

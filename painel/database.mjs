@@ -1,3 +1,4 @@
+import {checkWorkerPin} from './worker-pin.mjs';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync, readFileSync} from 'node:fs';
 import {dirname} from 'node:path';
@@ -21,6 +22,18 @@ export function openDatabase(filename=process.env.MOVA_DB_PATH||fileURLToPath(ne
  }
  const api={
   db,filename,
+  pinStatus(id){const numeric=idOf('funcionarios',id);if(!api.get('funcionarios',id))fail(404,'Funcionário não encontrado.');return {registered:!!db.prepare('SELECT 1 FROM funcionario_pins WHERE funcionario_id=?').get(numeric)};},
+  authorizeWorker(body){
+   const numeric=idOf('funcionarios',body.personId);let result;
+   db.exec('BEGIN IMMEDIATE');
+   try{
+    if(!api.get('funcionarios',body.personId))fail(404,'Funcionário não encontrado.');
+    result=checkWorkerPin(db.prepare('SELECT * FROM funcionario_pins WHERE funcionario_id=?').get(numeric),body);
+    if(result.save){const p=result.save;db.prepare('INSERT INTO funcionario_pins(funcionario_id,salt,pin_hash,tentativas,bloqueado_ate) VALUES (?,?,?,?,?) ON CONFLICT(funcionario_id) DO UPDATE SET tentativas=excluded.tentativas,bloqueado_ate=excluded.bloqueado_ate').run(numeric,p.salt,p.hash,p.failures,p.blocked);}
+    db.exec('COMMIT');
+   }catch(error){db.exec('ROLLBACK');throw error;}
+   if(result.error)throw result.error;
+  },
   authenticate(username,password){if(typeof username!=='string'||typeof password!=='string'||password.length>256)return false;const row=db.prepare('SELECT * FROM administradores WHERE usuario=?').get(username);if(!row)return false;return timingSafeEqual(scryptSync(password,row.salt,64),Buffer.from(row.senha_hash,'hex'));},
   list(type){if(!types[type])fail(404,'Tabela não encontrada.');return db.prepare(`SELECT * FROM ${type} ORDER BY nome COLLATE NOCASE,id`).all().map(r=>publicRow(type,r));},
   get(type,id){if(!types[type])fail(404,'Tabela não encontrada.');return publicRow(type,db.prepare(`SELECT * FROM ${type} WHERE id=?`).get(idOf(type,id)));},
@@ -57,6 +70,7 @@ export function openDatabase(filename=process.env.MOVA_DB_PATH||fileURLToPath(ne
    const workId=idOf('obras',body.workId),personId=idOf('funcionarios',body.personId);
    const items=body.items.map(i=>{if(!i||typeof i!=='object'||!units.includes(i.unit)||typeof i.quantity!=='number')fail(400,'Insumo inválido.');return{id:idOf('insumos',i.id),quantity:i.quantity,unit:i.unit};}).sort((a,b)=>a.id-b.id);
    if(new Set(items.map(i=>i.id)).size!==items.length)fail(400,'Um insumo aparece mais de uma vez.');
+   api.authorizeWorker(body);
    const hash=createHash('sha256').update(JSON.stringify({workId,personId,items})).digest('hex');
    db.exec('BEGIN IMMEDIATE');
    try{

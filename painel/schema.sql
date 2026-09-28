@@ -54,3 +54,11 @@ CREATE INDEX IF NOT EXISTS idx_itens_insumo ON retirada_itens(insumo_id);
 CREATE INDEX IF NOT EXISTS idx_retirada_obra ON retiradas(obra_id);
 CREATE INDEX IF NOT EXISTS idx_retirada_funcionario ON retiradas(funcionario_id);
 PRAGMA user_version = 1;
+
+CREATE TABLE IF NOT EXISTS funcionario_pins (
+ funcionario_id INTEGER PRIMARY KEY REFERENCES funcionarios(id) ON DELETE CASCADE,
+ salt TEXT NOT NULL,
+ pin_hash TEXT NOT NULL,
+ tentativas INTEGER NOT NULL DEFAULT 0,
+ bloqueado_ate BIGINT NOT NULL DEFAULT 0
+);

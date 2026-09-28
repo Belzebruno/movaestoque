@@ -47,6 +47,8 @@ export function createHandler(store){
     if(path==='/api/logout'&&method==='POST'){const session=await sessionOf(req);if(session)await sessionDelete(session.key);res.setHeader('Set-Cookie','mova_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(res,200,{admin:false});}
     if(path==='/api/retiradas'&&method==='GET'){await requireAdmin(req);return json(res,200,await store.history());}
     if(path==='/api/retiradas'&&method==='POST')return json(res,201,await store.withdraw(await bodyOf(req)));
+    const pinRoute=path.match(/^\/api\/funcionarios\/(FUN\d+)\/pin$/);
+    if(pinRoute&&method==='GET')return json(res,200,await store.pinStatus(pinRoute[1]));
     const route=path.match(/^\/api\/(insumos|funcionarios|obras)(?:\/([A-Z]+\d+))?$/);
     if(route){await requireAdmin(req);const [,type,id]=route;if(method==='GET'&&!id)return json(res,200,await store.list(type));if(method==='POST'&&!id)return json(res,201,await store.save(type,await bodyOf(req)));if(method==='PUT'&&id)return json(res,200,await store.save(type,await bodyOf(req),id));if(method==='DELETE'&&id){const body=await bodyOf(req);await store.remove(type,id,body.version);return json(res,200,{deleted:true});}}
     throw new HttpError(404,'Rota não encontrada.');

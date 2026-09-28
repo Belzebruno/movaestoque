@@ -14,7 +14,7 @@ test('Postgres: autenticação compartilhada, CRUD e retiradas atômicas',{skip:
  async function start(){store=openPostgres(process.env.MOVA_TEST_DATABASE_URL);server=createApp(store);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${server.address().port}`;}
  async function stop(){await new Promise(resolve=>server.close(resolve));await store.close();}
  await start();t.after(async()=>{if(server.listening)await stop();});
- async function req(path,method='GET',body,authenticated=true,extra={}){const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json','X-Mova-Client':'1',...(authenticated&&cookie?{Cookie:cookie}:{}),...extra},body:body===undefined?undefined:JSON.stringify(body)});return{status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')};}
+ async function req(path,method='GET',body,authenticated=true,extra={}){if(path==='/api/retiradas'&&method==='POST')body={pin:'0123',pinConfirm:'0123',...body};const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json','X-Mova-Client':'1',...(authenticated&&cookie?{Cookie:cookie}:{}),...extra},body:body===undefined?undefined:JSON.stringify(body)});return{status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')};}
  let product,work,person;
  await t.test('Começa vazio e guarda senha derivada, não texto puro',async()=>{
   assert.deepEqual((await req('/api/catalogo')).data,{products:[],people:[],works:[]});
