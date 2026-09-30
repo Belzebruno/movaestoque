@@ -81,3 +81,7 @@ CREATE TABLE IF NOT EXISTS checklist_ambientes (
  versao INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_checklist_obra ON checklist_ambientes(obra_id);
+
+ALTER TABLE checklist_ambientes ADD COLUMN IF NOT EXISTS corte INTEGER NOT NULL DEFAULT 0 CHECK(corte IN (0,1));
+ALTER TABLE checklist_ambientes ADD COLUMN IF NOT EXISTS producao INTEGER NOT NULL DEFAULT 0 CHECK(producao IN (0,1));
+ALTER TABLE checklist_ambientes ADD COLUMN IF NOT EXISTS obra INTEGER NOT NULL DEFAULT 0 CHECK(obra IN (0,1));

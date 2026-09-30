@@ -20,7 +20,7 @@ for(const engine of ['sqlite','postgres'])test('Checklist privado: '+engine,{ski
  assert.equal((await req('/api/checklist/session','GET',null,cookie)).data.authorized,true);
  assert.equal((await req('/api/obras','GET',null,cookie)).status,401);
  let response=await req(route,'POST',{nome:'Cozinha'},cookie);assert.equal(response.status,201);let row=response.data[0];assert.equal(row.nome,'Cozinha');assert.equal(row.projeto,false);
- for(const field of ['projeto','conferencia','fita','exportacao']){response=await req(route+'/'+row.id,'PUT',{[field]:true,versao:row.versao},cookie);assert.equal(response.status,200);row=response.data[0];assert.equal(row[field],true);}
+ for(const field of ['projeto','conferencia','fita','exportacao','corte','producao','obra']){response=await req(route+'/'+row.id,'PUT',{[field]:true,versao:row.versao},cookie);assert.equal(response.status,200);row=response.data[0];assert.equal(row[field],true);}
  response=await req(route+'/'+row.id,'PUT',{nome:'Cozinha gourmet',versao:row.versao},cookie);assert.equal(response.status,200);row=response.data[0];assert.equal(row.nome,'Cozinha gourmet');
  assert.equal((await req(route+'/'+row.id,'PUT',{projeto:false,versao:1},cookie)).status,409);
  assert.equal((await req(route+'/'+row.id,'PUT',{projeto:'true',versao:row.versao},cookie)).status,400);

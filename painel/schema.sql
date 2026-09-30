@@ -74,6 +74,9 @@ CREATE TABLE IF NOT EXISTS checklist_ambientes (
  conferencia INTEGER NOT NULL DEFAULT 0 CHECK(conferencia IN (0,1)),
  fita INTEGER NOT NULL DEFAULT 0 CHECK(fita IN (0,1)),
  exportacao INTEGER NOT NULL DEFAULT 0 CHECK(exportacao IN (0,1)),
+ corte INTEGER NOT NULL DEFAULT 0 CHECK(corte IN (0,1)),
+ producao INTEGER NOT NULL DEFAULT 0 CHECK(producao IN (0,1)),
+ obra INTEGER NOT NULL DEFAULT 0 CHECK(obra IN (0,1)),
  versao INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_checklist_obra ON checklist_ambientes(obra_id);

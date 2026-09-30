@@ -16,6 +16,8 @@ export function openDatabase(filename=process.env.MOVA_DB_PATH||fileURLToPath(ne
  const version=db.prepare('PRAGMA user_version').get().user_version;
  if(version>1)throw Error('Versão do banco mais recente que este aplicativo.');
  db.exec(readFileSync(new URL('./schema.sql',import.meta.url),'utf8'));
+ const checklistColumns=new Set(db.prepare('PRAGMA table_info(checklist_ambientes)').all().map(c=>c.name));
+ for(const field of ['corte','producao','obra'])if(!checklistColumns.has(field))db.exec(`ALTER TABLE checklist_ambientes ADD COLUMN ${field} INTEGER NOT NULL DEFAULT 0 CHECK(${field} IN (0,1))`);
  if(!db.prepare('SELECT usuario FROM administradores WHERE usuario=?').get('admin')){
    const salt=randomBytes(32).toString('hex');
    const password=process.env.MOVA_ADMIN_PASSWORD||'12345';

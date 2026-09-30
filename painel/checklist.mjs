@@ -1,7 +1,7 @@
 import {randomBytes,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {fail,idOf,text} from './validation.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
-const fields=['projeto','conferencia','fita','exportacao'];
+const fields=['projeto','conferencia','fita','exportacao','corte','producao','obra'];
 export function checklistStore(query){
  return {
   async seed(password){const salt=randomBytes(32).toString('hex');await query('INSERT INTO checklist_conta(usuario,salt,senha_hash) VALUES (?,?,?) ON CONFLICT(usuario) DO NOTHING',['belzebruno',salt,scryptSync(password,salt,64).toString('hex')]);},
@@ -19,7 +19,7 @@ export function checklistStore(query){
   },
   async session(token){if(!token)return false;const {rows}=await query('SELECT token_hash FROM checklist_sessoes WHERE token_hash=? AND ate>?',[hash(token),Date.now()]);return !!rows.length;},
   async logout(token){if(token)await query('DELETE FROM checklist_sessoes WHERE token_hash=?',[hash(token)]);},
-  async list(work){const workId=idOf('obras',work);const {rows:works}=await query('SELECT id FROM obras WHERE id=?',[workId]);if(!works.length)fail(404,'Obra não encontrada.');const {rows}=await query('SELECT id,nome,projeto,conferencia,fita,exportacao,versao FROM checklist_ambientes WHERE obra_id=? ORDER BY id',[workId]);return rows.map(row=>({...row,...Object.fromEntries(fields.map(f=>[f,!!row[f]]))}));},
+  async list(work){const workId=idOf('obras',work);const {rows:works}=await query('SELECT id FROM obras WHERE id=?',[workId]);if(!works.length)fail(404,'Obra não encontrada.');const {rows}=await query('SELECT id,nome,projeto,conferencia,fita,exportacao,corte,producao,obra,versao FROM checklist_ambientes WHERE obra_id=? ORDER BY id',[workId]);return rows.map(row=>({...row,...Object.fromEntries(fields.map(f=>[f,!!row[f]]))}));},
   async save(work,body,id){
    const workId=idOf('obras',work);if(!id){const name=text(body.nome,80);const {rows}=await query('INSERT INTO checklist_ambientes(obra_id,nome) SELECT id,? FROM obras WHERE id=? RETURNING id',[name,workId]);if(!rows.length)fail(404,'Obra não encontrada.');return;}
    if(!Number.isSafeInteger(Number(id))||Number(id)<1)fail(400,'Ambiente inválido.');
