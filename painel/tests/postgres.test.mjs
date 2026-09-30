@@ -73,15 +73,15 @@ test('Postgres: autenticação compartilhada, CRUD e retiradas atômicas',{skip:
   assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);assert.equal((await store.get('insumos',product.id)).stock,2.25);
   assert.equal((await req('/api/insumos/'+second.id,'DELETE',{version:second.version})).status,200);
  });
- await t.test('Exclui registros das três tabelas preservando histórico',async()=>{
+ await t.test('Excluir obra remove seu histórico; insumos e funcionários mantêm os demais registros',async()=>{
   const current=await store.get('insumos',product.id);
   assert.equal((await req('/api/insumos/'+product.id,'DELETE',{version:current.version},false)).status,401);
   assert.equal((await req('/api/insumos/'+product.id,'DELETE',{version:current.version})).status,200);
   assert.equal((await req('/api/obras/'+work.id,'DELETE',{version:work.version})).status,200);
   assert.equal((await req('/api/funcionarios/'+person.id,'DELETE',{version:person.version})).status,200);
   assert.deepEqual((await req('/api/catalogo')).data,{products:[],people:[],works:[]});
-  const history=(await req('/api/retiradas')).data;assert.equal(history.length,2);assert.equal(history[0].items[0].name,'Cola editada');assert.equal(history[0].person,'Funcionário editado');
-  await stop();await start();assert.equal((await store.history()).length,2);assert.equal((await store.list('insumos')).length,0);
+  const history=(await req('/api/retiradas')).data;assert.equal(history.length,0);
+  await stop();await start();assert.equal((await store.history()).length,0);assert.equal((await store.list('insumos')).length,0);
  });
  await t.test('Logout revoga a sessão no servidor',async()=>{
   cookie=(await req('/api/login','POST',{username:'admin',password:'12345'})).cookie.split(';')[0];

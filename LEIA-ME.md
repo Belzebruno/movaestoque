@@ -44,7 +44,7 @@ reenvios da mesma confirmação não descontam o estoque novamente.
 
 No PC, entre na Área administrativa com `admin` / `12345` e cadastre insumos
 (com saldo inicial), funcionários e obras. Os botões editar/excluir exigem login
-validado no servidor. A exclusão preserva os nomes no histórico de retiradas.
+validado no servidor. Excluir insumos ou funcionários preserva os nomes no histórico. Excluir uma obra apaga suas retiradas, os itens dessas retiradas e seu checklist, sem devolver saldo ao estoque.
 O Admin pode consultar o histórico. As sessões duram oito horas e, no Neon,
 continuam válidas mesmo quando a Vercel troca de instância.
 
@@ -99,7 +99,7 @@ no banco. A sessão do admin do estoque não autoriza estas rotas.
 Selecione uma obra existente, adicione ambientes e edite seus nomes diretamente.
 Projeto, Conferência, Fita e Exportação são checks independentes, salvos no banco.
 Conflitos entre abas não sobrescrevem silenciosamente o progresso: atualize a lista.
-Excluir uma obra no estoque também exclui seus ambientes vinculados.
+Excluir uma obra no estoque apaga seus ambientes, checks, retiradas e respectivos itens. Outras obras e os cadastros compartilhados de insumos e funcionários são preservados.
 
 Para preparar uma nova instalação, defina MOVA_CHECKLIST_PASSWORD no ambiente
 somente durante a execução de `node --env-file-if-exists=.env.local painel/setup-checklist.mjs`.

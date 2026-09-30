@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS retiradas (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
  chave_requisicao TEXT NOT NULL UNIQUE,
  conteudo_hash TEXT NOT NULL,
- obra_id INTEGER REFERENCES obras(id) ON DELETE SET NULL,
+ obra_id INTEGER REFERENCES obras(id) ON DELETE CASCADE,
  funcionario_id INTEGER REFERENCES funcionarios(id) ON DELETE SET NULL,
  obra_nome TEXT NOT NULL,
  funcionario_nome TEXT NOT NULL,
@@ -80,3 +80,10 @@ CREATE TABLE IF NOT EXISTS checklist_ambientes (
  versao INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_checklist_obra ON checklist_ambientes(obra_id);
+
+-- Atualiza também bancos SQLite criados antes da exclusão em cascata.
+CREATE TRIGGER IF NOT EXISTS excluir_retiradas_da_obra
+BEFORE DELETE ON obras FOR EACH ROW
+BEGIN
+ DELETE FROM retiradas WHERE obra_id=OLD.id;
+END;

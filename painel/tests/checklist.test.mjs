@@ -27,6 +27,15 @@ for(const engine of ['sqlite','postgres'])test('Checklist privado: '+engine,{ski
  assert.equal((await req('/api/checklist/obras/'+other.id+'/ambientes/'+row.id,'PUT',{projeto:false,versao:row.versao},cookie)).status,409);
  response=await req(route+'/'+row.id,'PUT',{projeto:false,versao:row.versao},cookie);assert.equal(response.data[0].projeto,false);
  assert.equal((await req(route,'GET',null,cookie)).data[0].nome,'Cozinha gourmet');
+ const product=await store.save('insumos',{name:'Cola teste',category:'Adesivos',unit:'kg',stock:20});const person=await store.save('funcionarios',{name:'Pessoa teste'});
+ for(const w of [work,other])await store.withdraw({requestId:randomUUID(),workId:w.id,personId:person.id,pin:'0123',pinConfirm:'0123',items:[{id:product.id,unit:'kg',quantity:2}]});
+ await store.checklist.save(other.id,{nome:'Outro ambiente'});
+ await assert.rejects(async()=>store.remove('obras',work.id,999),e=>e.status===409);assert.equal((await store.history()).length,2);
+ const savedStock=(await store.get('insumos',product.id)).stock;
+ await store.remove('obras',other.id,other.version);
+ const remaining=await store.history();assert.equal(remaining.length,1);assert.equal(remaining[0].work,work.name);assert.equal((await store.get('insumos',product.id)).stock,savedStock);
+ const count=async table=>engine==='sqlite'?store.db.prepare('SELECT count(*) AS n FROM '+table).get().n:Number((await store.pool.query('SELECT count(*) AS n FROM '+table)).rows[0].n);
+ assert.equal(await count('retirada_itens'),1);assert.equal(await count('checklist_ambientes'),1);assert.equal((await store.list('funcionarios')).length,1);assert.equal((await store.checklist.list(work.id))[0].nome,'Cozinha gourmet');
  await req('/api/checklist/logout','POST',{},cookie);assert.equal((await req(route,'GET',null,cookie)).status,401);
  const personal=await req('/api/login','POST',{username:'belzebruno',password:'test-only-password'});assert.equal(personal.status,200);assert.equal(personal.data.checklist,true);
  assert.equal((await req('/api/session','GET',null,personal.cookie)).data.checklist,true);
