@@ -1,8 +1,9 @@
+import {checklistRoutes} from './checklist.mjs';
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {randomBytes,createHash} from 'node:crypto';
 import {HttpError} from './validation.mjs';
-const assets=new Map([['/',['index.html','text/html; charset=utf-8']],['/index.html',['index.html','text/html; charset=utf-8']],['/styles.css',['styles.css','text/css; charset=utf-8']],['/app.js',['app.js','text/javascript; charset=utf-8']],['/logo-mova.png',['logo-mova.png','image/png']]]);
+const assets=new Map([['/checklist.html',['checklist.html','text/html; charset=utf-8']],['/checklist.js',['checklist.js','text/javascript; charset=utf-8']],['/checklist.css',['checklist.css','text/css; charset=utf-8']],['/',['index.html','text/html; charset=utf-8']],['/index.html',['index.html','text/html; charset=utf-8']],['/styles.css',['styles.css','text/css; charset=utf-8']],['/app.js',['app.js','text/javascript; charset=utf-8']],['/logo-mova.png',['logo-mova.png','image/png']]]);
 const tokenHash=value=>createHash('sha256').update(value).digest('hex');
 const SESSION_MS=8*60*60*1000;
 async function bodyOf(req){
@@ -21,6 +22,7 @@ export function createHandler(store){
  const sessionOf=async req=>{const cookie=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('mova_session='));if(!cookie)return null;const key=tokenHash(cookie.slice(13)),session=await sessionGet(key);if(!session||session.until<Date.now()){if(session)await sessionDelete(key);return null;}return{...session,key};};
  const requireAdmin=async req=>{if(!await sessionOf(req))throw new HttpError(401,'Entre no Admin para continuar.');};
  const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+ const checklist=checklistRoutes(store,bodyOf,json);
  return async(req,res)=>{
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');
   try{
@@ -32,6 +34,7 @@ export function createHandler(store){
      if(req.headers['sec-fetch-site']==='cross-site')throw new HttpError(403,'Origem não permitida.');
      if(req.headers.origin){let origin;try{origin=new URL(req.headers.origin);}catch{throw new HttpError(403,'Origem inválida.');}if(origin.host!==req.headers.host)throw new HttpError(403,'Origem não permitida.');}
     }
+    if(path.startsWith('/api/checklist/'))return await checklist(req,res,path);
     if(path==='/api/catalogo'&&method==='GET')return json(res,200,{products:await store.list('insumos'),people:await store.list('funcionarios'),works:await store.list('obras')});
     if(path==='/api/session'&&method==='GET')return json(res,200,{admin:!!(await sessionOf(req))});
     if(path==='/api/login'&&method==='POST'){

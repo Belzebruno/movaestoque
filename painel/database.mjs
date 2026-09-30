@@ -1,3 +1,4 @@
+import {checklistStore} from './checklist.mjs';
 import {checkWorkerPin} from './worker-pin.mjs';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync, readFileSync} from 'node:fs';
@@ -87,5 +88,6 @@ export function openDatabase(filename=process.env.MOVA_DB_PATH||fileURLToPath(ne
   },
   close(){db.close();}
  };
+ api.checklist=checklistStore(async(sql,values=[])=>{const stmt=db.prepare(sql);return /^(SELECT|.*RETURNING)/s.test(sql)?{rows:stmt.all(...values)}:{rows:[],changes:stmt.run(...values).changes};});
  return api;
 }

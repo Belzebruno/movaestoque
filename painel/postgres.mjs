@@ -1,3 +1,4 @@
+import {checklistStore} from './checklist.mjs';
 import {checkWorkerPin} from './worker-pin.mjs';
 import {Pool} from 'pg';
 import {attachDatabasePool} from '@vercel/functions';
@@ -140,5 +141,6 @@ export function openPostgres(connectionString=process.env.DATABASE_URL) {
   },
   close:()=>pool.end()
  };
+ api.checklist=checklistStore((sql,values=[])=>{let i=0;return query(sql.replace(/\?/g,()=>'$'+(++i)),values);});
  return api;
 }

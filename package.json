@@ -5,7 +5,7 @@
   "description": "Controle de estoque MOVA com PostgreSQL / Neon",
   "scripts": {
     "start": "node --env-file-if-exists=.env.local painel/server.mjs",
-    "check": "node --check painel/dist/app.js && node --check painel/server.mjs && node --check painel/database.mjs && node --check painel/http-app.mjs && node --check painel/postgres.mjs && node --check api/index.mjs",
+    "check": "node --check painel/dist/app.js && node --check painel/server.mjs && node --check painel/database.mjs && node --check painel/http-app.mjs && node --check painel/postgres.mjs && node --check api/index.mjs && node --check painel/checklist.mjs && node --check painel/dist/checklist.js && node --check painel/setup-checklist.mjs",
     "test": "node --test painel/tests/*.test.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local painel/migrate.mjs"
   },

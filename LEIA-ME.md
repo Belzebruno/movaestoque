@@ -91,3 +91,17 @@ salvo na autorização; caso o estoque impeça a retirada, ele permanece válido
 para a próxima tentativa. A migração é aditiva e preserva cadastros e histórico.
 
 No mobile, apenas a lista de itens rola verticalmente; o botão de conferência permanece visível.
+## Checklist privado de projetos
+
+Abra `/checklist.html` ou use Checklist de projetos no menu do PC. O acesso é
+exclusivo da conta belzebruno, com sessão própria e senha derivada por scrypt
+no banco. A sessão do admin do estoque não autoriza estas rotas.
+Selecione uma obra existente, adicione ambientes e edite seus nomes diretamente.
+Projeto, Conferência, Fita e Exportação são checks independentes, salvos no banco.
+Conflitos entre abas não sobrescrevem silenciosamente o progresso: atualize a lista.
+Excluir uma obra no estoque também exclui seus ambientes vinculados.
+
+Para preparar uma nova instalação, defina MOVA_CHECKLIST_PASSWORD no ambiente
+somente durante a execução de `node --env-file-if-exists=.env.local painel/setup-checklist.mjs`.
+O comando cria a conta se ainda não existir e não altera uma senha existente.
+Nunca inclua a senha em arquivos versionados ou no frontend.
