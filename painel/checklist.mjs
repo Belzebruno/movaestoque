@@ -32,7 +32,7 @@ export function checklistStore(query){
 }
 export function checklistRoutes(store,bodyOf,json){
  const tokenOf=req=>(req.headers.cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith('mova_checklist='))?.slice(15);
- const cookie=(req,token,max)=>`mova_checklist=${token}; HttpOnly; SameSite=Strict; Path=/api/checklist; Max-Age=${max}${process.env.VERCEL||req.socket.encrypted?'; Secure':''}`;
+ const cookie=(req,token,max)=>`mova_checklist=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${max}${process.env.VERCEL||req.socket.encrypted?'; Secure':''}`;
  return async(req,res,path)=>{
   const token=tokenOf(req),method=req.method;
   if(path==='/api/checklist/login'&&method==='POST'){const b=await bodyOf(req);const fresh=await store.checklist.login(b.username,b.password,process.env.VERCEL?req.headers['x-vercel-forwarded-for']||req.socket.remoteAddress:req.socket.remoteAddress);await store.checklist.logout(token);res.setHeader('Set-Cookie',cookie(req,fresh,28800));return json(res,200,{authorized:true});}

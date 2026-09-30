@@ -1,3 +1,4 @@
+if(new URLSearchParams(location.search).has('embedded'))document.body.classList.add('embedded');
 const $=s=>document.querySelector(s),stages=['projeto','conferencia','fita','exportacao'],labels=['Projeto','Conferência','Fita','Exportação'];let rows=[],busy=false,authorized=false;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function message(text,error=false){$('#message').textContent=text;$('#message').classList.toggle('error',error);clearTimeout(message.timer);message.timer=setTimeout(()=>$('#message').textContent='',error?6500:2000);}

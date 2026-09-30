@@ -93,7 +93,7 @@ para a próxima tentativa. A migração é aditiva e preserva cadastros e histó
 No mobile, apenas a lista de itens rola verticalmente; o botão de conferência permanece visível.
 ## Checklist privado de projetos
 
-Abra `/checklist.html` ou use Checklist de projetos no menu do PC. O acesso é
+Entre na Área administrativa com belzebruno e abra a aba Checklist de projetos. O acesso é
 exclusivo da conta belzebruno, com sessão própria e senha derivada por scrypt
 no banco. A sessão do admin do estoque não autoriza estas rotas.
 Selecione uma obra existente, adicione ambientes e edite seus nomes diretamente.

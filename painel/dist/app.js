@@ -27,11 +27,11 @@ const categoryIcons = {'Fixação':'wrench','Adesivos':'droplets','Elétrica':'b
 const unitNames = {un:'Unidade',caixa:'Caixa',tubo:'Tubo',rolo:'Rolo',m:'Metro',kg:'Quilograma',L:'Litro',par:'Par'};
 const categories = ['Todos','Fixação','Adesivos','Elétrica','Hidráulica','Proteção','Outros'];
 const products=[],works=[],people=[];
-const state={cart:new Map(),records:[],view:'retirada',admin:false,tab:'insumos',editing:null,deleting:null,reviewing:false,ready:false,pending:null,busy:false};
+const state={cart:new Map(),records:[],view:'retirada',admin:false,checklist:false,tab:'insumos',editing:null,deleting:null,reviewing:false,ready:false,pending:null,busy:false};
 
 function apiType(type){return type==='pessoas'?'funcionarios':type;}
 function requestId(){const bytes=crypto.getRandomValues(new Uint8Array(16));return [...bytes].map(v=>v.toString(16).padStart(2,'0')).join('');}
-function clearAdmin(){state.admin=false;state.records=[];$('#admin-content').innerHTML='';if(state.view==='admin')navigate('retirada');}
+function clearAdmin(){state.admin=false;state.checklist=false;$('#checklist-tab').hidden=true;state.tab='insumos';state.records=[];$('#admin-content').innerHTML='';if(state.view==='admin')navigate('retirada');}
 async function api(path,method='GET',body){
  let response;try{response=await fetch(path,{method,headers:{'Content-Type':'application/json','X-Mova-Client':'1'},body:body===undefined?undefined:JSON.stringify(body),credentials:'same-origin',signal:AbortSignal.timeout(15000)});}catch{throw Error('Sem conexão com o servidor. Confira a rede e tente novamente.');}
  const data=await response.json();if(!response.ok){if(response.status===401&&path!=='/api/login')clearAdmin();throw Error(data.error||'Não foi possível concluir.');}return data;
@@ -79,11 +79,13 @@ function adminOnly(){if(!state.admin){$('#login-dialog').showModal();return fals
 function navigate(view){if(view==='admin'&&!adminOnly())return;state.view=view;document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!==`view-${view}`);document.querySelectorAll('.nav-item').forEach(el=>{el.classList.toggle('active',el.dataset.view===view);if(el.dataset.view===view)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('#breadcrumb-current').textContent=view==='admin'?'Área administrativa':'Nova retirada';$('#mobile-cart-button').hidden=!state.cart.size||view!=='retirada';if(view==='admin')loadAdmin();}
 function renderAdmin(){
  if(!state.admin)return;
+ $('#checklist-tab').hidden=!state.checklist;if(state.tab==='checklist'&&!state.checklist)state.tab='insumos';
  const critical=products.filter(p=>p.stock<10).sort((a,b)=>a.stock-b.stock||a.name.localeCompare(b.name,'pt-BR'));
  $('#critical-count').textContent=critical.length;
  $('#critical-count').classList.toggle('has-critical',critical.length>0);
  document.querySelectorAll('[data-admin-tab]').forEach(el=>{el.classList.toggle('active',el.dataset.adminTab===state.tab);el.setAttribute('aria-pressed',String(el.dataset.adminTab===state.tab));});
  $('#admin-section-title').textContent={insumos:'Insumos cadastrados',obras:'Obras cadastradas',pessoas:'Funcionários cadastrados',historico:'Histórico de retiradas',critico:'Estoque crítico'}[state.tab];$('#new-entry').hidden=['historico','critico'].includes(state.tab);$('#new-entry-label').textContent={insumos:'Novo insumo',obras:'Nova obra',pessoas:'Novo funcionário'}[state.tab]||'';
+ if(state.tab==='checklist'){ $('#admin-section-title').textContent='Checklist de projetos';$('#new-entry').hidden=true;if(!$('#checklist-frame'))$('#admin-content').innerHTML='<iframe id="checklist-frame" title="Checklist de projetos" src="/checklist.html?embedded=1"></iframe>';return;}
  if(state.tab==='critico'){
   $('#admin-content').innerHTML=critical.length?
    '<div class="notice critical-notice" role="status">'+critical.length+' insumo(s) com saldo abaixo de 10 na unidade cadastrada. Providencie a reposição.</div><div class="admin-table-wrap"><table><thead><tr><th>Código</th><th>Insumo</th><th>Saldo atual</th><th>Situação</th></tr></thead><tbody>'+critical.map(p=>'<tr><td>'+escapeHTML(p.id)+'</td><td class="name-cell">'+escapeHTML(p.name)+(p.detail?'<div class="product-meta">'+escapeHTML(p.detail)+'</div>':'')+'</td><td><strong>'+formatQuantity(p.stock)+' '+escapeHTML(p.unit)+'</strong></td><td><span class="stock-alert '+(p.stock===0?'stock-empty':'')+'">'+(p.stock===0?'Sem estoque':'Está acabando')+'</span></td></tr>').join('')+'</tbody></table></div>':
@@ -115,7 +117,7 @@ $('#product').addEventListener('change',refreshQuantity);
 $('#cart-content').addEventListener('change',event=>{const id=event.target.dataset.quantity;if(!id)return;const p=products.find(p=>p.id===id),q=Number(event.target.value);if(p&&Number.isFinite(q)&&q>0&&q<=99999&&(fractional(p)||Number.isInteger(q)))state.cart.set(id,q);else renderCart();});
 $('#login-form').addEventListener('submit',async event=>{
  event.preventDefault();const button=event.target.querySelector('[type="submit"]');button.disabled=true;
- try{await api('/api/login','POST',{username:$('#username').value.trim(),password:$('#password').value});state.admin=true;$('#login-error').hidden=true;event.target.reset();$('#login-dialog').close();navigate('admin');}
+ try{const session=await api('/api/login','POST',{username:$('#username').value.trim(),password:$('#password').value});state.admin=true;state.checklist=!!session.checklist;$('#checklist-tab').hidden=!state.checklist;$('#login-error').hidden=true;event.target.reset();$('#login-dialog').close();navigate('admin');}
  catch(error){$('#login-error').textContent=error.message;$('#login-error').hidden=false;$('#password').value='';$('#password').focus();}finally{button.disabled=false;}
 });
 $('#product-form').addEventListener('submit',async event=>{
@@ -128,7 +130,7 @@ $('#product-form').addEventListener('submit',async event=>{
 $('#review-dialog').addEventListener('close',()=>state.reviewing=false);
 $('.brand').addEventListener('click',event=>{event.preventDefault();navigate('retirada');});
 window.addEventListener('beforeunload',event=>{if(state.cart.size){event.preventDefault();event.returnValue='';}});
-$('#current-date').textContent=new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'numeric'});hydrateIcons();refreshSelectors();renderCart();navigate('retirada');loadCatalog();api('/api/session').then(s=>state.admin=s.admin).catch(()=>{});setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]')&&!state.busy){loadCatalog();api('/api/session').then(s=>{if(state.admin&&!s.admin)clearAdmin();}).catch(()=>{});}},15000);window.addEventListener('focus',()=>{if(!document.querySelector('dialog[open]'))loadCatalog();});
+$('#current-date').textContent=new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'numeric'});hydrateIcons();refreshSelectors();renderCart();navigate('retirada');loadCatalog();api('/api/session').then(s=>{state.admin=s.admin;state.checklist=!!s.checklist;$('#checklist-tab').hidden=!state.checklist;}).catch(()=>{});setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]')&&!state.busy){loadCatalog();api('/api/session').then(s=>{if(state.admin&&!s.admin)clearAdmin();else{state.checklist=!!s.checklist;$('#checklist-tab').hidden=!state.checklist;if(state.view==='admin'&&state.tab==='checklist'&&!state.checklist){state.tab='insumos';renderAdmin();}}}).catch(()=>{});}},15000);window.addEventListener('focus',()=>{if(!document.querySelector('dialog[open]'))loadCatalog();});
 if(document.modelContext?.registerTool){const lifecycle=new AbortController();try{Promise.resolve(document.modelContext.registerTool({name:'stage_withdrawal_item',title:'Adicionar insumo à lista',description:'Adiciona um produto à lista de retirada, sem confirmar ou alterar estoque.',inputSchema:{type:'object',properties:{code:{type:'string'},quantity:{type:'number',exclusiveMinimum:0,maximum:99999}},required:['code','quantity'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||typeof input.code!=='string'||typeof input.quantity!=='number')throw Error('Informe código e quantidade.');addProduct(input.code,input.quantity);navigate('retirada');return{code:input.code,quantity:state.cart.get(input.code),status:'staged'};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});}
 
 

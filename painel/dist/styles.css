@@ -207,3 +207,5 @@
 @media(prefers-reduced-motion:reduce) { #item-added-popup { animation:none; } }
 
 @media (max-width:1100px), (hover:none) and (pointer:coarse) { .checklist-link { display:none; } }
+
+#checklist-frame{display:block;width:100%;height:calc(100dvh - 280px);min-height:620px;border:0;border-radius:8px;background:#f7f7f4}
