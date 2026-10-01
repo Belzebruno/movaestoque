@@ -2,4 +2,4 @@
 
 .embedded header{display:none}.embedded main{padding:12px 0;max-width:none}.embedded .heading h1{font-size:28px}.embedded .heading{margin-bottom:20px}
 
-.row-actions{display:flex;gap:6px;justify-content:center}.row-actions button{min-height:36px;padding:8px 10px;font-size:12px}.row-actions .danger{color:#a13228;border-color:#e7c7c3}.row-actions .danger:hover{background:#fff1ef}td:first-child{min-width:190px}td input[type=text]:focus{background:#fff;border-color:#888}
+.row-actions{display:flex;gap:6px;justify-content:center}.row-actions button{width:44px;min-height:44px;padding:10px;display:inline-grid;place-items:center}.row-actions button svg{width:18px;height:18px}.row-actions .danger{color:#a13228;border-color:#e7c7c3}.row-actions .danger:hover{background:#fff1ef}td:first-child{min-width:190px}td input[type=text]:focus{background:#fff;border-color:#888}
