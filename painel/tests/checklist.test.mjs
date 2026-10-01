@@ -27,6 +27,15 @@ for(const engine of ['sqlite','postgres'])test('Checklist privado: '+engine,{ski
  assert.equal((await req('/api/checklist/obras/'+other.id+'/ambientes/'+row.id,'PUT',{projeto:false,versao:row.versao},cookie)).status,409);
  response=await req(route+'/'+row.id,'PUT',{projeto:false,versao:row.versao},cookie);assert.equal(response.data[0].projeto,false);
  assert.equal((await req(route,'GET',null,cookie)).data[0].nome,'Cozinha gourmet');
+ response=await req(route,'POST',{nome:'Ambiente para excluir'},cookie);const removable=response.data.at(-1);
+ const deletePath=route+'/'+removable.id;
+ assert.equal((await req(deletePath,'DELETE',{versao:removable.versao})).status,401);
+ assert.equal((await req(deletePath,'DELETE',{versao:removable.versao},admin.cookie)).status,401);
+ assert.equal((await req(deletePath,'DELETE',{versao:0},cookie)).status,400);
+ assert.equal((await req(deletePath,'DELETE',{versao:999},cookie)).status,409);
+ assert.equal((await req('/api/checklist/obras/'+other.id+'/ambientes/'+removable.id,'DELETE',{versao:removable.versao},cookie)).status,409);
+ response=await req(deletePath,'DELETE',{versao:removable.versao},cookie);assert.equal(response.status,200);assert.equal(response.data.length,1);assert.equal(response.data[0].nome,'Cozinha gourmet');
+ assert.equal((await req(deletePath,'DELETE',{versao:removable.versao},cookie)).status,409);
  const product=await store.save('insumos',{name:'Cola teste',category:'Adesivos',unit:'kg',stock:20});const person=await store.save('funcionarios',{name:'Pessoa teste'});
  for(const w of [work,other])await store.withdraw({requestId:randomUUID(),workId:w.id,personId:person.id,pin:'0123',pinConfirm:'0123',items:[{id:product.id,unit:'kg',quantity:2}]});
  await store.checklist.save(other.id,{nome:'Outro ambiente'});

@@ -4,7 +4,7 @@ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 function message(text,error=false){$('#message').textContent=text;$('#message').classList.toggle('error',error);clearTimeout(message.timer);message.timer=setTimeout(()=>$('#message').textContent='',error?6500:2000);}
 function showAuth(value){authorized=value;$('#login-panel').hidden=value;$('#workspace').hidden=!value;$('#logout').hidden=!value;if(!value){rows=[];$('#environments').replaceChildren();$('#work').innerHTML='<option value="">Selecione uma obra</option>';$('#environment-name').value='';$('#work-content').hidden=true;}}
 async function api(path,method='GET',data){const r=await fetch('/api/checklist'+path,{method,credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-Mova-Client':'1'},body:data===undefined?undefined:JSON.stringify(data)});const result=await r.json();if(!r.ok){if(r.status===401)showAuth(false);throw Error(result.error||'Não foi possível salvar.');}return result;}
-function render(){const done=rows.reduce((total,row)=>total+stages.filter(k=>row[k]).length,0);$('#progress-count').textContent=done+' / '+rows.length*stages.length;$('#empty').hidden=!!rows.length;$('#environments').innerHTML=rows.map(row=>`<tr class="${stages.every(k=>row[k])?'complete':''}"><td><input type="text" maxlength="80" data-id="${row.id}" data-field="nome" value="${escape(row.nome)}" aria-label="Nome do ambiente ${escape(row.nome)}"></td>${stages.map((key,i)=>`<td><input type="checkbox" data-id="${row.id}" data-field="${key}" aria-label="${labels[i]} de ${escape(row.nome)}" ${row[key]?'checked':''}></td>`).join('')}</tr>`).join('');}
+function render(){const done=rows.reduce((total,row)=>total+stages.filter(k=>row[k]).length,0);$('#progress-count').textContent=done+' / '+rows.length*stages.length;$('#empty').hidden=!!rows.length;$('#environments').innerHTML=rows.map(row=>`<tr class="${stages.every(k=>row[k])?'complete':''}"><td><input type="text" maxlength="80" data-id="${row.id}" data-field="nome" value="${escape(row.nome)}" aria-label="Nome do ambiente ${escape(row.nome)}"></td>${stages.map((key,i)=>`<td><input type="checkbox" data-id="${row.id}" data-field="${key}" aria-label="${labels[i]} de ${escape(row.nome)}" ${row[key]?'checked':''}></td>`).join('')}<td><div class="row-actions"><button type="button" data-action="edit" data-id="${row.id}" aria-label="Editar ${escape(row.nome)}">Editar</button><button type="button" class="danger" data-action="delete" data-id="${row.id}" aria-label="Excluir ${escape(row.nome)}">Excluir</button></div></td></tr>`).join('');}
 function lock(value){busy=value;$('#workspace').querySelectorAll('input,button,select').forEach(el=>el.disabled=value);$('#logout').disabled=value;}
 async function loadWorks(){const works=await api('/obras'),selected=$('#work').value;$('#work').innerHTML='<option value="">Selecione uma obra</option>'+works.map(w=>`<option value="${w.id}">${escape(w.name)}</option>`).join('');if(works.some(w=>w.id===selected))$('#work').value=selected;$('#choose').textContent=works.length?'Selecione uma obra para começar.':'Nenhuma obra cadastrada no estoque.';await loadRows();}
 async function loadRows(){const work=$('#work').value;$('#work-content').hidden=!work;$('#choose').hidden=!!work;rows=[];render();rows=work?await api('/obras/'+work+'/ambientes'):[];render();}
@@ -18,3 +18,14 @@ function saveField(el){const row=rows.find(r=>r.id===Number(el.dataset.id));if(!
 $('#environments').addEventListener('change',event=>saveField(event.target));
 $('#environments').addEventListener('focusout',event=>{if(event.target.type==='text')saveField(event.target);});
 (async()=>{try{const session=await api('/session');showAuth(session.authorized);if(session.authorized)await action(loadWorks);}catch(error){message(error.message,true);}})();
+
+$('#environments').addEventListener('click',event=>{
+ const button=event.target.closest('button[data-action]');if(!button||busy)return;
+ const row=rows.find(r=>r.id===Number(button.dataset.id));if(!row)return;
+ if(button.dataset.action==='edit'){
+  const input=$('#environments').querySelector('input[data-id="'+row.id+'"][data-field="nome"]');
+  input.focus();input.select();return;
+ }
+ if(!confirm('Excluir o ambiente "'+row.nome+'" e todas as suas marcações? Essa ação não pode ser desfeita.'))return;
+ action(async()=>{rows=await api('/obras/'+$('#work').value+'/ambientes/'+row.id,'DELETE',{versao:row.versao});render();message('Ambiente excluído.');});
+});

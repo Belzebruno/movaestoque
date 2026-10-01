@@ -20,6 +20,13 @@ export function checklistStore(query){
   async session(token){if(!token)return false;const {rows}=await query('SELECT token_hash FROM checklist_sessoes WHERE token_hash=? AND ate>?',[hash(token),Date.now()]);return !!rows.length;},
   async logout(token){if(token)await query('DELETE FROM checklist_sessoes WHERE token_hash=?',[hash(token)]);},
   async list(work){const workId=idOf('obras',work);const {rows:works}=await query('SELECT id FROM obras WHERE id=?',[workId]);if(!works.length)fail(404,'Obra não encontrada.');const {rows}=await query('SELECT id,nome,projeto,conferencia,fita,exportacao,corte,producao,obra,versao FROM checklist_ambientes WHERE obra_id=? ORDER BY id',[workId]);return rows.map(row=>({...row,...Object.fromEntries(fields.map(f=>[f,!!row[f]]))}));},
+  async remove(work,id,version){
+   const workId=idOf('obras',work);
+   if(!Number.isSafeInteger(Number(id))||Number(id)<1)fail(400,'Ambiente inválido.');
+   if(!Number.isSafeInteger(version)||version<1)fail(400,'Versão inválida.');
+   const {rows}=await query('DELETE FROM checklist_ambientes WHERE id=? AND obra_id=? AND versao=? RETURNING id',[Number(id),workId,version]);
+   if(!rows.length)fail(409,'O ambiente mudou em outra aba. Atualize e tente novamente.');
+  },
   async save(work,body,id){
    const workId=idOf('obras',work);if(!id){const name=text(body.nome,80);const {rows}=await query('INSERT INTO checklist_ambientes(obra_id,nome) SELECT id,? FROM obras WHERE id=? RETURNING id',[name,workId]);if(!rows.length)fail(404,'Obra não encontrada.');return;}
    if(!Number.isSafeInteger(Number(id))||Number(id)<1)fail(400,'Ambiente inválido.');
@@ -42,6 +49,7 @@ export function checklistRoutes(store,bodyOf,json){
   if(path==='/api/checklist/obras'&&method==='GET')return json(res,200,await store.list('obras'));
   const match=path.match(/^\/api\/checklist\/obras\/(OBR\d+)\/ambientes(?:\/(\d+))?$/);
   if(match){const [,work,id]=match;if(method==='GET'&&!id)return json(res,200,await store.checklist.list(work));if((method==='POST'&&!id)||(method==='PUT'&&id)){await store.checklist.save(work,await bodyOf(req),id);return json(res,method==='POST'?201:200,await store.checklist.list(work));}}
+  if(match&&method==='DELETE'&&match[2]){const body=await bodyOf(req);await store.checklist.remove(match[1],match[2],body.versao);return json(res,200,await store.checklist.list(match[1]));}
   fail(404,'Rota não encontrada.');
  };
 }
