@@ -3,7 +3,7 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {randomBytes,createHash} from 'node:crypto';
 import {HttpError} from './validation.mjs';
-const assets=new Map([['/checklist.html',['checklist.html','text/html; charset=utf-8']],['/checklist.js',['checklist.js','text/javascript; charset=utf-8']],['/checklist.css',['checklist.css','text/css; charset=utf-8']],['/',['index.html','text/html; charset=utf-8']],['/index.html',['index.html','text/html; charset=utf-8']],['/styles.css',['styles.css','text/css; charset=utf-8']],['/app.js',['app.js','text/javascript; charset=utf-8']],['/logo-mova.png',['logo-mova.png','image/png']]]);
+const assets=new Map([['/history-data.js',['history-data.js','text/javascript; charset=utf-8']],['/checklist.html',['checklist.html','text/html; charset=utf-8']],['/checklist.js',['checklist.js','text/javascript; charset=utf-8']],['/checklist.css',['checklist.css','text/css; charset=utf-8']],['/',['index.html','text/html; charset=utf-8']],['/index.html',['index.html','text/html; charset=utf-8']],['/styles.css',['styles.css','text/css; charset=utf-8']],['/app.js',['app.js','text/javascript; charset=utf-8']],['/logo-mova.png',['logo-mova.png','image/png']]]);
 const tokenHash=value=>createHash('sha256').update(value).digest('hex');
 const SESSION_MS=8*60*60*1000;
 async function bodyOf(req){

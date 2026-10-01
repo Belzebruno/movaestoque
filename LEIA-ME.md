@@ -105,3 +105,9 @@ Para preparar uma nova instalação, defina MOVA_CHECKLIST_PASSWORD no ambiente
 somente durante a execução de `node --env-file-if-exists=.env.local painel/setup-checklist.mjs`.
 O comando cria a conta se ainda não existir e não altera uma senha existente.
 Nunca inclua a senha em arquivos versionados ou no frontend.
+## Histórico de retiradas e CSV
+
+Na área administrativa, a aba Retiradas mostra uma linha por item retirado.
+Combine filtros de funcionário, produto, obra e período (datas inclusivas, horário de Brasília).
+Exportar resultados CSV inclui todas as páginas filtradas; Exportar tudo CSV inclui todo o histórico carregado.
+Use Atualizar histórico para buscar registros recentes. O CSV usa UTF-8, separador ponto e vírgula e quantidades com vírgula decimal.
